@@ -1,94 +1,87 @@
 import { useNavigate } from "react-router";
 import { Plus, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function Tournaments() {
   const navigate = useNavigate();
   const [selectedTournament, setSelectedTournament] = useState(null);
+  const [tournaments, setTournaments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const tournaments = [
-    {
-      id: 1,
-      name: "Valorant Weekly Cup",
-      game: "Valorant",
-      category: "VALORANT",
-      organizer: "DSD Gaming",
-      prize: "5000",
-      expiry: "Mar 25, 2026",
-      joined: 12,
-      status: "Active",
-      players: [
-        { userId: 1, gamerName: "AceShooter", email: "ace@email.com" },
-        { userId: 2, gamerName: "NightWolf", email: "night@email.com" },
-        { userId: 3, gamerName: "Phantom", email: "phantom@email.com" },
-      ],
-    },
-    {
-      id: 2,
-      name: "CSGO Wingman Battle",
-      game: "CSGO",
-      category: "WINGMAN",
-      organizer: "Mythic Dreamz",
-      prize: "10000",
-      expiry: "Apr 1, 2026",
-      joined: 8,
-      status: "Active",
-      players: [
-        { userId: 4, gamerName: "ShadowKing", email: "shadow@email.com" },
-        { userId: 5, gamerName: "ThunderBolt", email: "thunder@email.com" },
-      ],
-    },
-    {
-      id: 3,
-      name: "PUBG Squad Championship",
-      game: "PUBG",
-      category: "SQUAD",
-      organizer: "DSD Gaming",
-      prize: "15000",
-      expiry: "Apr 10, 2026",
-      joined: 24,
-      status: "Active",
-      players: [
-        { userId: 6, gamerName: "DragonSlayer", email: "dragon@email.com" },
-        { userId: 7, gamerName: "CyberNinja", email: "cyber@email.com" },
-        { userId: 8, gamerName: "WarriorX", email: "warrior@email.com" },
-      ],
-    },
-    {
-      id: 4,
-      name: "Free Fire Clash",
-      game: "Free Fire",
-      category: "FREE_FIRE",
-      organizer: "ESL Gaming",
-      prize: "8000",
-      expiry: "Mar 28, 2026",
-      joined: 16,
-      status: "Active",
-      players: [
-        { userId: 1, gamerName: "AceShooter", email: "ace@email.com" },
-        { userId: 2, gamerName: "NightWolf", email: "night@email.com" },
-      ],
-    },
-    {
-      id: 5,
-      name: "BGMI Solo Masters",
-      game: "BGMI",
-      category: "SOLO",
-      organizer: "DSD Gaming",
-      prize: "12000",
-      expiry: "Mar 15, 2026",
-      joined: 32,
-      status: "Ended",
-      players: [
-        { userId: 3, gamerName: "Phantom", email: "phantom@email.com" },
-        { userId: 4, gamerName: "ShadowKing", email: "shadow@email.com" },
-      ],
-    },
-  ];
+  useEffect(() => {
+    const fetchTournaments = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("http://localhost:8080/api/v1/global/tournaments");
+        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+        const data = await res.json();
+
+        // Map backend shape to UI shape
+        const mapped = data.map((t) => {
+          const expiryDate = t.tournamentExpiry ? new Date(t.tournamentExpiry) : null;
+          const now = new Date();
+          return {
+            id: t.tournamentId,
+            name: t.tournamentName,
+            game: t.gameName,
+            category: t.tournamentCategory,
+            organizer: t.organizerName,
+            prize: String(t.tournamentPrize),
+            expiry: expiryDate ? expiryDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "-",
+            joined: t.totalJoined ?? 0,
+            status: expiryDate && expiryDate < now ? "Ended" : "Active",
+            players: [], // backend doesn't return players yet
+            description: t.description,
+            createdAt: t.tournamentCreated,
+          };
+        });
+
+        setTournaments(mapped);
+      } catch (err) {
+        setError(err.message || "Failed to load tournaments");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTournaments();
+  }, []);
 
   const handleDelete = (id, name) => {
-    toast.success(`Tournament "${name}" deleted successfully`);
+    // legacy - replaced by themed modal
+    setDeleteTarget({ id, name });
+  };
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const performDelete = async () => {
+    if (!deleteTarget) return;
+    const { id, name } = deleteTarget;
+    setDeleting(true);
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/tournaments/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Status ${res.status}`);
+      }
+
+      setTournaments((prev) => prev.filter((t) => t.id !== id));
+      if (selectedTournament === id) setSelectedTournament(null);
+      toast.success(`Tournament "${name}" deleted successfully`);
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete tournament. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleViewPlayers = (tournamentId) => {
@@ -119,7 +112,12 @@ export function Tournaments() {
       </div>
 
       {/* Table */}
-      <div className="bg-[#141414] border border-[#262626] rounded-xl overflow-hidden">
+      {loading ? (
+        <div className="flex items-center justify-center p-12 text-gray-400">Loading tournaments...</div>
+      ) : error ? (
+        <div className="p-6 text-red-400">Error: {error}</div>
+      ) : (
+        <div className="bg-[#141414] border border-[#262626] rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -188,7 +186,43 @@ export function Tournaments() {
             </tbody>
           </table>
         </div>
-      </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => !deleting && setDeleteTarget(null)}
+        >
+          <div
+            className="bg-[#141414] border border-[#262626] rounded-xl max-w-md w-full overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-[#262626]">
+              <h3 className="text-xl font-bold text-white">Delete Tournament</h3>
+              <p className="text-gray-400 mt-1">Are you sure you want to delete "{deleteTarget.name}"? This action cannot be undone.</p>
+            </div>
+
+            <div className="p-4 flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="px-4 py-2 bg-[#1f1f1f] hover:bg-[#262626] text-gray-300 rounded-lg transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={performDelete}
+                disabled={deleting}
+                className={`px-4 py-2 rounded-lg text-white ${deleting ? 'bg-[#7a0a0c]' : 'bg-red-600 hover:bg-red-700'}`}
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Players Modal */}
       {selectedTournament && selectedTournamentData && (

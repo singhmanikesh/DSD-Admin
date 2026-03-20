@@ -1,18 +1,46 @@
 import { useState } from "react";
-import { Coins, Mail } from "lucide-react";
+import { Coins, User } from "lucide-react";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { toast } from "sonner";
 
 export function AddHP() {
-  const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [hpAmount, setHpAmount] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast.success(`Successfully added ${hpAmount} HP to ${email}`);
-    setEmail("");
-    setHpAmount("");
+    if (!userId) return toast.error("Please provide a user ID");
+    setSubmitting(true);
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/users/${userId}/hp`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hp: Number(hpAmount) }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Status ${res.status}`);
+      }
+
+      // backend returns a simple success message
+      const text = await res.text();
+      toast.success(text || `Added ${hpAmount} HP to user ${userId}`);
+      setUserId("");
+      setHpAmount("");
+    } catch (err) {
+      console.error(err);
+      // Provide a clearer message for network/CORS issues
+      if (err instanceof TypeError || /failed to fetch/i.test(String(err.message))) {
+        toast.error("Network error: cannot reach backend. Is the backend running and CORS enabled?");
+      } else {
+        toast.error(err.message || "Failed to add HP. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -34,17 +62,17 @@ export function AddHP() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* User Email */}
+            {/* User ID */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">User Email</Label>
+              <Label htmlFor="userId" className="text-gray-300">User ID</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g., user@email.com"
+                  id="userId"
+                  type="number"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  placeholder="e.g., 1"
                   className="pl-11 bg-[#1f1f1f] border-[#262626] text-white placeholder:text-gray-600 focus:border-[#E50914] focus:ring-[#E50914]/20"
                   required
                 />
@@ -88,18 +116,18 @@ export function AddHP() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-[#E50914] hover:bg-[#b8070f] text-white rounded-lg transition-all shadow-lg shadow-[#E50914]/20 hover:shadow-[#E50914]/40"
+              disabled={submitting}
+              className={`w-full py-3 px-4 rounded-lg transition-all shadow-lg shadow-[#E50914]/20 ${
+                submitting
+                  ? "bg-[#7a0a0c] text-gray-200 cursor-not-allowed"
+                  : "bg-[#E50914] hover:bg-[#b8070f] text-white hover:shadow-[#E50914]/40"
+              }`}
             >
-              Add HP
+              {submitting ? "Adding..." : "Add HP"}
             </button>
           </form>
 
-          {/* Mock Input Preview */}
-          <div className="mt-6 p-4 bg-[#1f1f1f] border border-[#262626] rounded-lg">
-            <p className="text-xs text-gray-500 mb-2">Example Input:</p>
-            <p className="text-sm text-gray-400">Email: user@email.com</p>
-            <p className="text-sm text-gray-400">HP: 100</p>
-          </div>
+          {/* removed preview per request */}
         </div>
       </div>
     </div>

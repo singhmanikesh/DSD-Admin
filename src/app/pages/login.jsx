@@ -16,14 +16,65 @@ export function Login() {
     return <Navigate to="/" replace />;
   }
 
-  const handleLogin = (e) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email && password) {
+    if (!email || !password) return toast.error("Please enter email and password");
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await (res.headers.get("content-type")?.includes("application/json") ? res.json() : res.text());
+
+      if (!res.ok) {
+        const msg = data?.error || data || `Status ${res.status}`;
+        throw new Error(msg);
+      }
+
+      // Save minimal required fields and full user object for role checks
       localStorage.setItem("dsd_admin_logged_in", "true");
+      if (data.accesstoken) localStorage.setItem("dsd_admin_accessToken", data.accesstoken);
+
+      // Backend may return a nested `user` object, or return flags at root level.
+      const userObj = data.user || {
+        gamerName: data.gamerName || data.gamername || data.name,
+        isOwner: typeof data.isOwner !== "undefined" ? data.isOwner : false,
+        isAdmin: typeof data.isAdmin !== "undefined" ? data.isAdmin : false,
+      };
+
+      if (userObj) {
+        try {
+          localStorage.setItem("dsd_admin_user", JSON.stringify(userObj));
+        } catch (e) {
+          // ignore storage errors
+        }
+        if (userObj.gamerName) localStorage.setItem("dsd_admin_gamerName", userObj.gamerName);
+        // Ensure explicit flags (store false if missing)
+        localStorage.setItem("dsd_admin_isOwner", String(Boolean(userObj.isOwner)));
+        localStorage.setItem("dsd_admin_isAdmin", String(Boolean(userObj.isAdmin)));
+      } else {
+        // Clear any previous user data
+        localStorage.removeItem("dsd_admin_user");
+        localStorage.setItem("dsd_admin_isOwner", "false");
+        localStorage.setItem("dsd_admin_isAdmin", "false");
+      }
+
       toast.success("Login successful!");
       navigate("/");
-    } else {
-      toast.error("Please enter email and password");
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error && err.message) {
+        toast.error(err.message);
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,12 +138,7 @@ export function Login() {
             </button>
           </form>
 
-          {/* Mock credentials hint */}
-          <div className="mt-6 p-3 bg-[#1f1f1f] border border-[#262626] rounded-lg">
-            <p className="text-xs text-gray-500 text-center">
-              Demo: admin@dsdgaming.com / any password
-            </p>
-          </div>
+         
         </div>
       </div>
     </div>

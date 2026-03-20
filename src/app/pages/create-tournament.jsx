@@ -20,20 +20,75 @@ export function CreateTournament() {
   });
 
   const categories = [
+    // Games
     "VALORANT",
+    "DOTA2",
     "CSGO",
-    "WINGMAN",
     "PUBG",
-    "SQUAD",
-    "SOLO",
-    "FREE_FIRE",
-    "BGMI",
+
+    // Game Modes
+    "AIM_1V1",
+    "MODE_2V2",
+    "MODE_5V5",
+    "HOSTAGE",
+    "WINGMAN",
+
+    // Tournament Format
+    "SINGLE_ELIMINATION",
+    "DOUBLE_ELIMINATION",
+    "ROUND_ROBIN",
+    "SWISS_SYSTEM",
+    "FFA",
+
+    // Tournament Status
+    "UPCOMING",
+    "ONGOING",
+    "FINISHED",
+
+    // Prize Types
+    "MONEY",
+    "POINTS",
   ];
 
-  const handleSubmit = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast.success("Tournament created successfully!");
-    navigate("/tournaments");
+    setSubmitting(true);
+
+    const payload = {
+      tournamentName: formData.name,
+      tournamentCategory: formData.category,
+      tournamentExpiry: formData.expiry,
+      tournamentPrize: Number(formData.prize),
+      organizerName: formData.organizer,
+      gameName: formData.game,
+      description: formData.description,
+    };
+
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/tournaments/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Status ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // Show success to the user (do not show full backend response)
+      toast.success(`Tournament "${data.tournamentName || formData.name}" created successfully!`);
+      navigate("/tournaments");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create tournament. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleChange = (field, value) => {
@@ -160,9 +215,14 @@ export function CreateTournament() {
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
-                className="flex-1 py-3 px-4 bg-[#E50914] hover:bg-[#b8070f] text-white rounded-lg transition-all shadow-lg shadow-[#E50914]/20 hover:shadow-[#E50914]/40"
+                disabled={submitting}
+                className={`flex-1 py-3 px-4 rounded-lg transition-all shadow-lg shadow-[#E50914]/20 ${
+                  submitting
+                    ? "bg-[#7a0a0c] text-gray-200 cursor-not-allowed"
+                    : "bg-[#E50914] hover:bg-[#b8070f] text-white hover:shadow-[#E50914]/40"
+                }`}
               >
-                Create Tournament
+                {submitting ? "Creating..." : "Create Tournament"}
               </button>
               <button
                 type="button"
@@ -175,18 +235,6 @@ export function CreateTournament() {
           </div>
         </form>
 
-        {/* Mock Preview */}
-        <div className="mt-6 bg-[#141414] border border-[#262626] rounded-xl p-6">
-          <h3 className="text-white font-medium mb-3">Preview Data:</h3>
-          <div className="text-sm text-gray-400 space-y-1">
-            <p>Tournament Name: Valorant Weekly Cup</p>
-            <p>Category: VALORANT</p>
-            <p>Game Name: Valorant</p>
-            <p>Prize: ₹5000</p>
-            <p>Organizer: DSD Gaming</p>
-            <p>Expiry: 2026-03-25</p>
-          </div>
-        </div>
       </div>
     </div>
   );
