@@ -85,14 +85,47 @@ export function Tournaments() {
   };
 
   const handleViewPlayers = (tournamentId) => {
-    setSelectedTournament(tournamentId);
+    // fetch players for the tournament and then open modal
+    fetchPlayersForTournament(tournamentId);
   };
 
   const closeModal = () => {
     setSelectedTournament(null);
+    setPlayers([]);
+    setPlayersError(null);
+    setPlayersLoading(false);
   };
 
   const selectedTournamentData = tournaments.find((t) => t.id === selectedTournament);
+  const [players, setPlayers] = useState([]);
+  const [playersLoading, setPlayersLoading] = useState(false);
+  const [playersError, setPlayersError] = useState(null);
+
+  const fetchPlayersForTournament = async (tournamentId) => {
+    setPlayers([]);
+    setPlayersLoading(true);
+    setPlayersError(null);
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/tournaments/${tournamentId}/users`);
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      const data = await res.json();
+
+      // Only keep required fields and normalize keys
+      const mapped = (data || []).map((p) => ({
+        userId: p.userId ?? p.id ?? null,
+        gamerName: p.gamerName || p.gamer_name || p.name || "",
+        email: p.email || "",
+      }));
+
+      setPlayers(mapped);
+      setSelectedTournament(tournamentId);
+    } catch (err) {
+      console.error(err);
+      setPlayersError(err.message || "Failed to load players");
+    } finally {
+      setPlayersLoading(false);
+    }
+  };
 
   return (
     <div className="p-8">
@@ -225,7 +258,7 @@ export function Tournaments() {
       )}
 
       {/* Players Modal */}
-      {selectedTournament && selectedTournamentData && (
+      {selectedTournament && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
           onClick={closeModal}
@@ -237,15 +270,20 @@ export function Tournaments() {
             {/* Modal Header */}
             <div className="p-6 border-b border-[#262626]">
               <h2 className="text-2xl font-bold text-white mb-1">
-                {selectedTournamentData.name}
+                {selectedTournamentData ? selectedTournamentData.name : "Players"}
               </h2>
               <p className="text-gray-400">
-                Total Players: {selectedTournamentData.players.length}
+                Total Players: {players.length}
               </p>
             </div>
 
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {playersLoading ? (
+                <div className="text-gray-400 p-6">Loading players...</div>
+              ) : playersError ? (
+                <div className="text-red-400 p-6">Error: {playersError}</div>
+              ) : (
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#262626]">
@@ -255,7 +293,7 @@ export function Tournaments() {
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedTournamentData.players.map((player) => (
+                  {players.map((player) => (
                     <tr
                       key={player.userId}
                       className="border-b border-[#262626] hover:bg-[#1f1f1f] transition-colors"
@@ -264,7 +302,7 @@ export function Tournaments() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-[#E50914]/20 flex items-center justify-center text-[#E50914] font-medium">
-                            {player.gamerName.charAt(0)}
+                            {player.gamerName ? player.gamerName.charAt(0) : "-"}
                           </div>
                           <span className="text-white">{player.gamerName}</span>
                         </div>
@@ -274,6 +312,7 @@ export function Tournaments() {
                   ))}
                 </tbody>
               </table>
+              )}
             </div>
 
             {/* Modal Footer */}
