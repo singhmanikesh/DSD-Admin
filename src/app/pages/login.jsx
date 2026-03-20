@@ -40,29 +40,29 @@ export function Login() {
       localStorage.setItem("dsd_admin_logged_in", "true");
       if (data.accesstoken) localStorage.setItem("dsd_admin_accessToken", data.accesstoken);
 
-      // Backend may return a nested `user` object, or return flags at root level.
-      const userObj = data.user || {
-        gamerName: data.gamerName || data.gamername || data.name,
-        isOwner: typeof data.isOwner !== "undefined" ? data.isOwner : false,
-        isAdmin: typeof data.isAdmin !== "undefined" ? data.isAdmin : false,
-      };
+      // Derive role flags from either root-level fields or nested `user` object.
+      const isOwnerFlag = typeof data.isOwner !== "undefined" ? data.isOwner : (data.user?.isOwner ?? false);
+      const isAdminFlag = typeof data.isAdmin !== "undefined" ? data.isAdmin : (data.user?.isAdmin ?? false);
 
-      if (userObj) {
-        try {
-          localStorage.setItem("dsd_admin_user", JSON.stringify(userObj));
-        } catch (e) {
-          // ignore storage errors
-        }
-        if (userObj.gamerName) localStorage.setItem("dsd_admin_gamerName", userObj.gamerName);
-        // Ensure explicit flags (store false if missing)
-        localStorage.setItem("dsd_admin_isOwner", String(Boolean(userObj.isOwner)));
-        localStorage.setItem("dsd_admin_isAdmin", String(Boolean(userObj.isAdmin)));
-      } else {
-        // Clear any previous user data
-        localStorage.removeItem("dsd_admin_user");
-        localStorage.setItem("dsd_admin_isOwner", "false");
-        localStorage.setItem("dsd_admin_isAdmin", "false");
+      // Build a stored user object (prefer backend `user` if present, but ensure flags exist)
+      const userObj = data.user
+        ? { ...data.user, isOwner: isOwnerFlag, isAdmin: isAdminFlag }
+        : {
+            gamerName: data.gamerName || data.gamername || data.name,
+            isOwner: isOwnerFlag,
+            isAdmin: isAdminFlag,
+          };
+
+      try {
+        localStorage.setItem("dsd_admin_user", JSON.stringify(userObj));
+      } catch (e) {
+        // ignore storage errors
       }
+
+      if (userObj.gamerName) localStorage.setItem("dsd_admin_gamerName", userObj.gamerName);
+      // Store explicit flags derived from the response (not just from userObj fields)
+      localStorage.setItem("dsd_admin_isOwner", String(Boolean(isOwnerFlag)));
+      localStorage.setItem("dsd_admin_isAdmin", String(Boolean(isAdminFlag)));
 
       toast.success("Login successful!");
       navigate("/");

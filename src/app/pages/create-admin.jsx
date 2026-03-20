@@ -7,7 +7,23 @@ import { toast } from "sonner";
 
 export function CreateAdmin() {
   const navigate = useNavigate();
-  // Access checks removed — page is available to any logged-in admin for now
+  // Read role flags from localStorage to determine permissions
+  let isOwner = false;
+  let isAdmin = false;
+  try {
+    const userJson = localStorage.getItem("dsd_admin_user");
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      isOwner = Boolean(user?.isOwner);
+      isAdmin = Boolean(user?.isAdmin);
+    } else {
+      isOwner = localStorage.getItem("dsd_admin_isOwner") === "true";
+      isAdmin = localStorage.getItem("dsd_admin_isAdmin") === "true";
+    }
+  } catch (e) {
+    isOwner = localStorage.getItem("dsd_admin_isOwner") === "true";
+    isAdmin = localStorage.getItem("dsd_admin_isAdmin") === "true";
+  }
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -53,7 +69,24 @@ export function CreateAdmin() {
     }
   };
 
-  // No gating; render form below
+  // If the user is not an owner, show a themed error instead of the form.
+  if (!isOwner) {
+    return (
+      <div className="p-8">
+        <div className="max-w-2xl">
+          <div className="bg-[#141414] border border-[#262626] rounded-xl p-8 text-center">
+            <h2 className="text-2xl font-bold text-white mb-2">Insufficient Permissions</h2>
+            <p className="text-gray-400 mb-6">
+              {isAdmin
+                ? "You have admin access but not owner permissions. Contact an owner to create admin accounts."
+                : "You do not have permission to access this page. Contact an owner to request access."}
+            </p>
+            <button onClick={() => navigate(-1)} className="px-6 py-2 bg-[#1f1f1f] hover:bg-[#262626] text-gray-300 rounded-lg">Go back</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
