@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { Plus, Trash2, Eye } from "lucide-react";
+import { Plus, Trash2, Eye, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
@@ -101,6 +101,13 @@ export function Tournaments() {
   const [playersLoading, setPlayersLoading] = useState(false);
   const [playersError, setPlayersError] = useState(null);
 
+  // Teams state
+  const [teams, setTeams] = useState([]);
+  const [teamsLoading, setTeamsLoading] = useState(false);
+  const [teamsError, setTeamsError] = useState(null);
+  const [selectedTeamsTournament, setSelectedTeamsTournament] = useState(null);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+
   const fetchPlayersForTournament = async (tournamentId) => {
     setPlayers([]);
     setPlayersLoading(true);
@@ -125,6 +132,54 @@ export function Tournaments() {
     } finally {
       setPlayersLoading(false);
     }
+  };
+
+  const handleViewTeams = (tournamentId) => {
+    fetchTeamsForTournament(tournamentId);
+  };
+
+  const fetchTeamsForTournament = async (tournamentId) => {
+    setTeams([]);
+    setTeamsLoading(true);
+    setTeamsError(null);
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/tournaments/${tournamentId}/teams`);
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      const data = await res.json();
+
+      // Expecting array of teams with players array
+      const mapped = (data || []).map((team, idx) => ({
+        id: team.teamId ?? idx,
+        teamName: team.teamName || team.name || "Team",
+        teamLeader: team.teamLeader || team.leader || "",
+        players: Array.isArray(team.players) ? team.players : [],
+      }));
+
+      setTeams(mapped);
+      setSelectedTeamsTournament(tournamentId);
+    } catch (err) {
+      console.error(err);
+      setTeamsError(err.message || "Failed to load teams");
+    } finally {
+      setTeamsLoading(false);
+    }
+  };
+
+  const closeTeamsModal = () => {
+    setSelectedTeamsTournament(null);
+    setTeams([]);
+    setTeamsError(null);
+    setTeamsLoading(false);
+    setSelectedTeam(null);
+  };
+
+  const handleViewTeamPlayers = (team) => {
+    // team object already contains players array from backend
+    setSelectedTeam(team);
+  };
+
+  const closeTeamPlayersModal = () => {
+    setSelectedTeam(null);
   };
 
   return (
@@ -204,6 +259,13 @@ export function Tournaments() {
                         title="View Players"
                       >
                         <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleViewTeams(tournament.id)}
+                        className="p-2 hover:bg-[#E50914]/20 text-gray-400 hover:text-[#E50914] rounded transition-colors"
+                        title="View Teams"
+                      >
+                        <Users className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(tournament.id, tournament.name)}
@@ -319,6 +381,113 @@ export function Tournaments() {
             <div className="p-6 border-t border-[#262626]">
               <button
                 onClick={closeModal}
+                className="w-full py-2 px-4 bg-[#1f1f1f] hover:bg-[#262626] text-white rounded-lg transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Teams Modal */}
+      {selectedTeamsTournament && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={closeTeamsModal}
+        >
+          <div
+            className="bg-[#141414] border border-[#262626] rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-[#262626]">
+              <h2 className="text-2xl font-bold text-white mb-1">Teams</h2>
+              <p className="text-gray-400">Total Teams: {teams.length}</p>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {teamsLoading ? (
+                <div className="text-gray-400 p-6">Loading teams...</div>
+              ) : teamsError ? (
+                <div className="text-red-400 p-6">Error: {teamsError}</div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[#262626]">
+                      <th className="text-left px-4 py-3 text-gray-400 font-medium">Team Name</th>
+                      <th className="text-left px-4 py-3 text-gray-400 font-medium">Leader</th>
+                      <th className="text-left px-4 py-3 text-gray-400 font-medium">Players</th>
+                      <th className="text-left px-4 py-3 text-gray-400 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teams.map((team) => (
+                      <tr key={team.id} className="border-b border-[#262626] hover:bg-[#1f1f1f] transition-colors">
+                        <td className="px-4 py-3 text-white">{team.teamName}</td>
+                        <td className="px-4 py-3 text-gray-300">{team.teamLeader}</td>
+                        <td className="px-4 py-3 text-white">{team.players ? team.players.length : 0}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => handleViewTeamPlayers(team)}
+                            className="px-3 py-1 bg-[#1f1f1f] hover:bg-[#262626] text-white rounded-lg"
+                          >
+                            View Team Players
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-[#262626]">
+              <button
+                onClick={closeTeamsModal}
+                className="w-full py-2 px-4 bg-[#1f1f1f] hover:bg-[#262626] text-white rounded-lg transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Team Players Modal */}
+      {selectedTeam && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={closeTeamPlayersModal}
+        >
+          <div
+            className="bg-[#141414] border border-[#262626] rounded-xl max-w-md w-full max-h-[70vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-[#262626]">
+              <h3 className="text-xl font-bold text-white">{selectedTeam.teamName}</h3>
+              <p className="text-gray-400">Leader: {selectedTeam.teamLeader}</p>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[50vh]">
+              {(!selectedTeam.players || selectedTeam.players.length === 0) ? (
+                <div className="text-gray-400 p-6">No players in this team.</div>
+              ) : (
+                <ul className="space-y-3">
+                  {selectedTeam.players.map((p, i) => (
+                    <li key={i} className="flex items-center gap-3 px-3 py-2 bg-[#0f0f0f] rounded">
+                      <div className="w-8 h-8 rounded-full bg-[#E50914]/20 flex items-center justify-center text-[#E50914] font-medium">{typeof p === 'string' ? p.charAt(0) : (p.gamerName ? p.gamerName.charAt(0) : '-')}</div>
+                      <div>
+                        <div className="text-white">{typeof p === 'string' ? p : (p.gamerName || p.name || JSON.stringify(p))}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-[#262626]">
+              <button
+                onClick={closeTeamPlayersModal}
                 className="w-full py-2 px-4 bg-[#1f1f1f] hover:bg-[#262626] text-white rounded-lg transition-all"
               >
                 Close
