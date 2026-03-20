@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Navigate } from "react-router";
 import { Gamepad2, Lock, Mail } from "lucide-react";
+import logo from "../../assets/DSD logo nav bars.png";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { toast } from "sonner";
@@ -91,10 +92,8 @@ export function Login() {
         <div className="bg-[#141414] border border-[#262626] rounded-xl p-8 shadow-2xl">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <Gamepad2 className="w-12 h-12 text-[#E50914]" />
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-1">DSD Gaming</h1>
+            <img src={logo} alt="DSD Gaming Logo" className="object-contain mb-1" style={{ height: 162 }} />
+            <h1 className="text-2xl font-bold text-white mb-0">DSD Premium Gaming</h1>
             <p className="text-gray-400">Admin Login</p>
           </div>
 

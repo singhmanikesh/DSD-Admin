@@ -8,6 +8,7 @@ import {
   Gamepad2,
   UserPlus,
 } from "lucide-react";
+import logo from "../../assets/DSD logo nav bars.png";
 
 export function DashboardLayout() {
   const navigate = useNavigate();
@@ -72,13 +73,7 @@ export function DashboardLayout() {
       <aside className="w-64 bg-black border-r border-[#262626] flex flex-col">
         {/* Logo */}
         <div className="h-20 flex items-center justify-center border-b border-[#262626]">
-          <div className="flex items-center gap-2">
-            <Gamepad2 className="w-8 h-8 text-[#E50914]" />
-            <div>
-              <h1 className="text-xl font-bold text-white">DSD Gaming</h1>
-              <p className="text-xs text-gray-400">Admin Panel</p>
-            </div>
-          </div>
+          <img src={logo} alt="DSD Gaming Logo" className="object-contain" style={{ height: 108 }} />
         </div>
 
         {/* Navigation */}
