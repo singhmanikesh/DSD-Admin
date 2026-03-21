@@ -12,7 +12,7 @@ export function Users() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("http://187.127.133.215/api/v1/users");
+        const res = await fetch("https://dsdpremiumgaming.com/api/v1/users");
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
         const data = await res.json();
         setUsers(data);

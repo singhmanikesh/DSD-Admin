@@ -39,7 +39,7 @@ export function CreateAdmin() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("http://187.127.133.215/api/v1/admin/register", {
+      const res = await fetch("https://dsdpremiumgaming.com/api/v1/admin/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
