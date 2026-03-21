@@ -50,10 +50,6 @@ export function DashboardLayout() {
     isOwner = localStorage.getItem("dsd_admin_isOwner") === "true";
   }
 
-  const base = "/admin";
-  const normalizedPath = location.pathname.startsWith(base)
-    ? location.pathname.slice(base.length) || "/"
-    : location.pathname;
   const menuItems = [
     { icon: Trophy, label: "Tournaments", path: "/tournaments" },
     { icon: Users, label: "Users", path: "/users" },
@@ -67,7 +63,7 @@ export function DashboardLayout() {
   const activePath = (
     menuItems
       .map((m) => m.path)
-      .filter((p) => (p === "/" ? normalizedPath === "/" : normalizedPath.startsWith(p)))
+      .filter((p) => (p === "/" ? location.pathname === "/" : location.pathname.startsWith(p)))
       .sort((a, b) => b.length - a.length)[0] || "/"
   );
 
