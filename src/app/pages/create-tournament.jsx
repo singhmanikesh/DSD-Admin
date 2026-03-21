@@ -69,7 +69,7 @@ export function CreateTournament() {
     };
 
     try {
-      const res = await fetch("http://187.127.133.215:8080/api/v1/tournaments/create", {
+      const res = await fetch("http://187.127.133.215/api/v1/tournaments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
