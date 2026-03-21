@@ -17,6 +17,7 @@ export function CreateTournament() {
     organizer: "",
     expiry: "",
     description: "",
+    hpReward: "",
   });
 
   const categories = [
@@ -61,6 +62,7 @@ export function CreateTournament() {
       tournamentCategory: formData.category,
       tournamentExpiry: formData.expiry,
       tournamentPrize: Number(formData.prize),
+      hpReward: formData.hpReward === "" ? null : Number(formData.hpReward),
       organizerName: formData.organizer,
       gameName: formData.game,
       description: formData.description,
@@ -183,6 +185,19 @@ export function CreateTournament() {
                   required
                 />
               </div>
+            </div>
+
+            {/* HP Reward */}
+            <div className="space-y-2">
+              <Label htmlFor="hpReward" className="text-gray-300">HP Reward </Label>
+              <Input
+                id="hpReward"
+                type="number"
+                value={formData.hpReward}
+                onChange={(e) => handleChange("hpReward", e.target.value)}
+                placeholder="e.g., 50"
+                className="bg-[#1f1f1f] border-[#262626] text-white placeholder:text-gray-600 focus:border-[#E50914] focus:ring-[#E50914]/20"
+              />
             </div>
 
             {/* Expiry Date */}

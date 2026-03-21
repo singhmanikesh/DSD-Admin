@@ -30,6 +30,7 @@ export function Tournaments() {
             category: t.tournamentCategory,
             organizer: t.organizerName,
             prize: String(t.tournamentPrize),
+            hpReward: typeof t.hpReward !== 'undefined' && t.hpReward !== null ? t.hpReward : null,
             expiry: expiryDate ? expiryDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "-",
             joined: t.totalJoined ?? 0,
             status: expiryDate && expiryDate < now ? "Ended" : "Active",
@@ -216,6 +217,7 @@ export function Tournaments() {
                 <th className="text-left px-6 py-4 text-gray-400 font-medium">Category</th>
                 <th className="text-left px-6 py-4 text-gray-400 font-medium">Organizer</th>
                 <th className="text-left px-6 py-4 text-gray-400 font-medium">Prize</th>
+                <th className="text-left px-6 py-4 text-gray-400 font-medium">HP Reward</th>
                 <th className="text-left px-6 py-4 text-gray-400 font-medium">Expiry Date</th>
                 <th className="text-left px-6 py-4 text-gray-400 font-medium">Joined</th>
                 <th className="text-left px-6 py-4 text-gray-400 font-medium">Status</th>
@@ -238,6 +240,7 @@ export function Tournaments() {
                   </td>
                   <td className="px-6 py-4 text-gray-300">{tournament.organizer}</td>
                   <td className="px-6 py-4 text-green-400">₹{tournament.prize}</td>
+                  <td className="px-6 py-4 text-blue-300">{tournament.hpReward !== null ? `${tournament.hpReward} HP` : '-'}</td>
                   <td className="px-6 py-4 text-gray-300">{tournament.expiry}</td>
                   <td className="px-6 py-4 text-white">{tournament.joined}</td>
                   <td className="px-6 py-4">
