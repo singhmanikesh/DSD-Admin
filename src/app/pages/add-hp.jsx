@@ -14,7 +14,7 @@ export function AddHP() {
     if (!userId) return toast.error("Please provide a user ID");
     setSubmitting(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/users/${userId}/hp`, {
+      const res = await fetch(`http://187.127.133.215:8080/api/v1/users/${userId}/hp`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hp: Number(hpAmount) }),

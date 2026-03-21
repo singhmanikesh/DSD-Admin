@@ -15,7 +15,7 @@ export function Tournaments() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("http://localhost:8080/api/v1/global/tournaments");
+        const res = await fetch("http://187.127.133.215:8080/api/v1/global/tournaments");
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
         const data = await res.json();
 
@@ -64,7 +64,7 @@ export function Tournaments() {
     const { id, name } = deleteTarget;
     setDeleting(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/tournaments/${id}`, {
+      const res = await fetch(`http://187.127.133.215:8080/api/v1/tournaments/${id}`, {
         method: "DELETE",
       });
 
@@ -114,7 +114,7 @@ export function Tournaments() {
     setPlayersLoading(true);
     setPlayersError(null);
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/tournaments/${tournamentId}/users`);
+      const res = await fetch(`http://187.127.133.215:8080/api/v1/tournaments/${tournamentId}/users`);
       if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
       const data = await res.json();
 
@@ -144,7 +144,7 @@ export function Tournaments() {
     setTeamsLoading(true);
     setTeamsError(null);
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/tournaments/${tournamentId}/teams`);
+      const res = await fetch(`http://187.127.133.215:8080/api/v1/tournaments/${tournamentId}/teams`);
       if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
       const data = await res.json();
 

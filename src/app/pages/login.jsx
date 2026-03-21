@@ -24,7 +24,7 @@ export function Login() {
     if (!email || !password) return toast.error("Please enter email and password");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8080/api/v1/admin/login", {
+      const res = await fetch("http://187.127.133.215:8080/api/v1/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
