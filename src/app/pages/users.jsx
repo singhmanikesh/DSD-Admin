@@ -2,6 +2,15 @@ import { Users as UsersIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
+const DEFAULT_AVATAR_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="50" fill="#2a2a2a" />
+  <circle cx="50" cy="38" r="18" fill="#8a8a8a" />
+  <path d="M20 92c6-18 20-28 30-28s24 10 30 28" fill="#8a8a8a" />
+</svg>
+`;
+const DEFAULT_AVATAR = `data:image/svg+xml;utf8,${encodeURIComponent(DEFAULT_AVATAR_SVG)}`;
+
 export function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -75,7 +84,11 @@ export function Users() {
                     <td className="px-6 py-4 text-white">{user.id}</td>
                     <td className="px-6 py-4">
                       <div className="w-10 h-10">
-                        <ImageWithFallback src={user.avatarUrl} alt={user.gamerName} className="w-10 h-10 rounded-full object-cover" />
+                        <ImageWithFallback
+                          src={user.avatarUrl || DEFAULT_AVATAR}
+                          alt={user.gamerName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
                       </div>
                     </td>
                     <td className="px-6 py-4 text-white">{user.gamerName}</td>

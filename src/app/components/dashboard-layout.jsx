@@ -53,8 +53,8 @@ export function DashboardLayout() {
   const menuItems = [
     { icon: Trophy, label: "Tournaments", path: "/tournaments" },
     { icon: Users, label: "Users", path: "/users" },
-    { icon: UserPlus, label: "Create Admin", path: "/admins/create" },
-    { icon: Coins, label: "Add HP", path: "/users/add-hp" },
+    { icon: UserPlus, label: "Create Admin", path: "/create-admin" },
+    { icon: Coins, label: "Add HP", path: "/add-hp" },
   ];
 
   // Determine the most specific matching menu path for the current location.

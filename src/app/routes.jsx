@@ -7,26 +7,31 @@ import { AddHP } from "./pages/add-hp";
 import { Users } from "./pages/users";
 import { DashboardLayout } from "./components/dashboard-layout";
 
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(
+  [
+    {
+      path: "/login",
+      Component: Login,
+    },
+    {
+      path: "/",
+      Component: DashboardLayout,
+      children: [
+        { index: true, element: <Navigate to="tournaments" replace /> },
+        { path: "tournaments", Component: Tournaments },
+        { path: "tournaments/create", Component: CreateTournament },
+        { path: "create-admin", Component: CreateAdmin },
+        { path: "users", Component: Users },
+        { path: "add-hp", Component: AddHP },
+        { path: "*", element: <Navigate to="tournaments" replace /> },
+      ],
+    },
+    {
+      path: "*",
+      element: <Navigate to="login" replace />,
+    },
+  ],
   {
-    path: "/login",
-    Component: Login,
-  },
-  {
-    path: "/",
-    Component: DashboardLayout,
-    children: [
-      { index: true, element: <Navigate to="/tournaments" replace /> },
-      { path: "tournaments", Component: Tournaments },
-      { path: "tournaments/create", Component: CreateTournament },
-      { path: "admins/create", Component: CreateAdmin },
-      { path: "users", Component: Users },
-      { path: "users/add-hp", Component: AddHP },
-      { path: "*", element: <Navigate to="/tournaments" replace /> },
-    ],
-  },
-  {
-    path: "*",
-    element: <Navigate to="/login" replace />,
-  },
-]);
+    basename: "/admin",   // ✅ THIS IS THE FIX
+  }
+);
